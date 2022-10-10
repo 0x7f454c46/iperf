@@ -90,6 +90,7 @@ typedef uint64_t iperf_size_t;
 #define OPT_DONT_FRAGMENT 26
 #define OPT_RCV_TIMEOUT 27
 #define OPT_SND_TIMEOUT 28
+#define OPT_MD5_PASSWORD 29
 
 /* states */
 #define TEST_START 1
@@ -440,6 +441,7 @@ enum {
     IEBINDDEVNOSUPPORT = 146,  // `ip%%dev` is not supported as system does not support bind to device
     IEHOSTDEV = 147,        // host device name (ip%%<dev>) is supported (and required) only for IPv6 link-local address
     IESETUSERTIMEOUT = 148, // Unable to set TCP USER_TIMEOUT (check perror)
+    IETCPAUTH = 149,        // Unable to set TCP-MD5 or TCP-AO
     /* Stream errors */
     IECREATESTREAM = 200,   // Unable to create a new stream (check herror/perror)
     IEINITSTREAM = 201,     // Unable to initialize stream (check herror/perror)

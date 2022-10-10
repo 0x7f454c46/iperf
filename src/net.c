@@ -230,7 +230,7 @@ create_socket(int domain, int proto, const char *local, const char *bind_dev, in
 
 /* make connection to server */
 int
-netdial(int domain, int proto, const char *local, const char *bind_dev, int local_port, const char *server, int port, int timeout)
+netdial(int domain, int proto, const char *local, const char *bind_dev, int local_port, const char *server, int port, int timeout, struct connection_args *args)
 {
     struct addrinfo *server_res = NULL;
     int s, saved_errno;
@@ -238,6 +238,19 @@ netdial(int domain, int proto, const char *local, const char *bind_dev, int loca
     s = create_socket(domain, proto, local, bind_dev, local_port, server, port, &server_res);
     if (s < 0) {
       return -1;
+    }
+
+    if (args && args->md5_password) {
+	    struct sockaddr_in6 tmp = {};
+
+	    tmp.sin6_family = server_res->ai_family;
+	    if (set_tcp_md5(s, &tmp, args->md5_password)) {
+		    saved_errno = errno;
+		    close(s);
+		    freeaddrinfo(server_res);
+		    errno = saved_errno;
+		    return -1;
+	    }
     }
 
     if (timeout_connect(s, (struct sockaddr *) server_res->ai_addr, server_res->ai_addrlen, timeout) < 0 && errno != EINPROGRESS) {
@@ -255,7 +268,28 @@ netdial(int domain, int proto, const char *local, const char *bind_dev, int loca
 /***************************************************************/
 
 int
-netannounce(int domain, int proto, const char *local, const char *bind_dev, int port)
+set_tcp_md5(int sk, struct sockaddr_in6 *addr, char *password)
+{
+	size_t keylen = strlen(password);
+	struct tcp_md5sig md5sig = {};
+
+        if (addr->sin6_family == AF_INET6)
+		memcpy(&md5sig.tcpm_addr, addr, sizeof(struct sockaddr_in6));
+	else
+		memcpy(&md5sig.tcpm_addr, addr, sizeof(struct sockaddr_in));
+	md5sig.tcpm_keylen = keylen;
+	memcpy(md5sig.tcpm_key, password, keylen);
+	md5sig.tcpm_flags = TCP_MD5SIG_FLAG_PREFIX;
+	md5sig.tcpm_prefixlen = 0;
+
+	return setsockopt(sk, IPPROTO_TCP, TCP_MD5SIG_EXT,
+			  &md5sig, sizeof(md5sig));
+}
+
+/***************************************************************/
+
+int
+netannounce(int domain, int proto, const char *local, const char *bind_dev, int port, struct connection_args *args)
 {
     struct addrinfo hints, *res;
     char portstr[6];
@@ -346,6 +380,19 @@ netannounce(int domain, int proto, const char *local, const char *bind_dev, int 
 	freeaddrinfo(res);
         errno = saved_errno;
         return -1;
+    }
+
+    if (args && args->md5_password) {
+	    struct sockaddr_in6 tmp = {};
+
+	    tmp.sin6_family = res->ai_family;
+	    if (set_tcp_md5(s, &tmp, args->md5_password)) {
+		    saved_errno = errno;
+		    close(s);
+		    freeaddrinfo(res);
+		    errno = saved_errno;
+		    return -1;
+	    }
     }
 
     freeaddrinfo(res);

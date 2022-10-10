@@ -1078,6 +1078,7 @@ iperf_parse_arguments(struct iperf_test *test, int argc, char **argv)
         {"idle-timeout", required_argument, NULL, OPT_IDLE_TIMEOUT},
         {"rcv-timeout", required_argument, NULL, OPT_RCV_TIMEOUT},
         {"snd-timeout", required_argument, NULL, OPT_SND_TIMEOUT},
+        {"md5-password", required_argument, NULL, OPT_MD5_PASSWORD},
         {"debug", optional_argument, NULL, 'd'},
         {"help", no_argument, NULL, 'h'},
         {NULL, 0, NULL, 0}
@@ -1454,6 +1455,13 @@ iperf_parse_arguments(struct iperf_test *test, int argc, char **argv)
                 snd_timeout_flag = 1;
 	        break;
 #endif /* HAVE_TCP_USER_TIMEOUT */
+            case OPT_MD5_PASSWORD:
+                test->settings->tcp_md5_password = strdup(optarg);
+		if (!test->settings->tcp_md5_password || strlen(test->settings->tcp_md5_password) >= TCP_MD5SIG_MAXKEYLEN) {
+                    i_errno = IETCPAUTH;
+                    return -1;
+                }
+	        break;
             case 'A':
 #if defined(HAVE_CPU_AFFINITY)
                 test->affinity = strtol(optarg, &endptr, 0);

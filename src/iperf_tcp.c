@@ -273,6 +273,17 @@ iperf_tcp_listen(struct iperf_test *test)
             return -1;
         }
 
+	if (test->settings->tcp_md5_password) {
+		if (set_tcp_md5(s, (struct sockaddr_in6 *)res->ai_addr, test->settings->tcp_md5_password)) {
+			saved_errno = errno;
+			close(s);
+			freeaddrinfo(res);
+			errno = saved_errno;
+			i_errno = IETCPAUTH;
+			return -1;
+		}
+	}
+
 	/*
 	 * If we got an IPv6 socket, figure out if it should accept IPv4
 	 * connections as well.  See documentation in netannounce() for
@@ -433,6 +444,17 @@ iperf_tcp_connect(struct iperf_test *test)
         }
     }
 #endif /* HAVE_TCP_USER_TIMEOUT */
+
+    if (test->settings->tcp_md5_password) {
+	    if (set_tcp_md5(s, (struct sockaddr_in6 *)server_res->ai_addr, test->settings->tcp_md5_password)) {
+		    saved_errno = errno;
+		    close(s);
+		    freeaddrinfo(server_res);
+		    errno = saved_errno;
+		    i_errno = IETCPAUTH;
+		    return -1;
+	    }
+    }
 
     /* Read back and verify the sender socket buffer size */
     optlen = sizeof(sndbuf_actual);

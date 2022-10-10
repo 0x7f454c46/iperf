@@ -167,6 +167,8 @@ struct iperf_settings
     int       idle_timeout;         /* server idle time timeout */
     unsigned int snd_timeout; /* Timeout for sending tcp messages in active mode, in us */
     struct iperf_time rcv_timeout;  /* Timeout for receiving messages in active mode, in us */
+
+    char     *tcp_md5_password;
 };
 
 struct iperf_test;
