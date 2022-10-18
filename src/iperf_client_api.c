@@ -380,6 +380,10 @@ iperf_connect(struct iperf_test *test)
 	struct connection_args cargs = {};
 
         cargs.md5_password = test->settings->tcp_md5_password;
+        cargs.ao_password = test->settings->tcp_ao_password;
+        cargs.ao_algorithm = test->settings->tcp_ao_algorithm;
+        cargs.ao_sndid = TCP_AO_SNDID;
+	cargs.ao_rcvid = TCP_AO_RCVID;
 	// Create the control channel using an ephemeral port
 	test->ctrl_sck = netdial(test->settings->domain, Ptcp, test->bind_address, test->bind_dev, 0, test->server_hostname, test->server_port, test->settings->connect_timeout, &cargs);
     }

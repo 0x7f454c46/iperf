@@ -39,11 +39,14 @@ int parse_qos(const char *tos);
 
 struct connection_args {
 	char *md5_password;
+	char *ao_password;
+	char *ao_algorithm;
+	unsigned ao_sndid, ao_rcvid;
 };
 int netannounce(int domain, int proto, const char *local, const char *bind_dev, int port, struct connection_args *args);
 int netdial(int domain, int proto, const char *local, const char *bind_dev, int local_port, const char *server, int port, int timeout, struct connection_args *args);
 int set_tcp_md5(int sk, struct sockaddr_in6 *addr, char *password);
-
+int set_tcp_ao(int sk, struct sockaddr_in6 *addr, char *password, char *algo, unsigned sndid, unsigned rcvid);
 
 #define NET_SOFTERROR -1
 #define NET_HARDERROR -2

@@ -90,7 +90,9 @@ typedef uint64_t iperf_size_t;
 #define OPT_DONT_FRAGMENT 26
 #define OPT_RCV_TIMEOUT 27
 #define OPT_SND_TIMEOUT 28
-#define OPT_MD5_PASSWORD 29
+#define OPT_TCPMD5_PASSWORD 29
+#define OPT_TCPAO_PASSWORD 30
+#define OPT_TCPAO_ALGORITHM 31
 
 /* states */
 #define TEST_START 1

@@ -252,6 +252,19 @@ netdial(int domain, int proto, const char *local, const char *bind_dev, int loca
 		    return -1;
 	    }
     }
+    if (args && args->ao_password) {
+	    struct sockaddr_in6 tmp = {};
+
+	    tmp.sin6_family = server_res->ai_family;
+	    if (set_tcp_ao(s, &tmp, args->ao_password, args->ao_algorithm,
+			   args->ao_sndid, args->ao_rcvid)) {
+		    saved_errno = errno;
+		    close(s);
+		    freeaddrinfo(server_res);
+		    errno = saved_errno;
+		    return -1;
+	    }
+    }
 
     if (timeout_connect(s, (struct sockaddr *) server_res->ai_addr, server_res->ai_addrlen, timeout) < 0 && errno != EINPROGRESS) {
 	saved_errno = errno;
@@ -284,6 +297,39 @@ set_tcp_md5(int sk, struct sockaddr_in6 *addr, char *password)
 
 	return setsockopt(sk, IPPROTO_TCP, TCP_MD5SIG_EXT,
 			  &md5sig, sizeof(md5sig));
+}
+
+int
+set_tcp_ao(int sk, struct sockaddr_in6 *addr, char *password, char *algo,
+	   unsigned sndid, unsigned rcvid)
+{
+	size_t keylen = strlen(password);
+	struct tcp_ao ao = {};
+
+        if (addr->sin6_family == AF_INET6) {
+		struct sockaddr_in6 tmp = {};
+
+		tmp.sin6_family = AF_INET6;
+		memcpy(&ao.tcpa_addr, &tmp, sizeof(tmp));
+	} else {
+		struct sockaddr_in tmp = {};
+
+		tmp.sin_family = AF_INET;
+		memcpy(&ao.tcpa_addr, &tmp, sizeof(tmp));
+	}
+	ao.tcpa_keylen = keylen;
+	memcpy(ao.tcpa_key, password, keylen);
+	ao.tcpa_prefix = 0;
+	memcpy(ao.tcpa_alg_name, algo, 64);
+
+	ao.tcpa_rcvid = rcvid;
+	ao.tcpa_sndid = sndid;
+
+	ao.tcpa_maclen = 0;
+	ao.tcpa_keyflags = 0;
+	ao.tcpa_flags = 0;
+
+	return setsockopt(sk, IPPROTO_TCP, TCP_AO, &ao, sizeof(ao));
 }
 
 /***************************************************************/
@@ -387,6 +433,19 @@ netannounce(int domain, int proto, const char *local, const char *bind_dev, int 
 
 	    tmp.sin6_family = res->ai_family;
 	    if (set_tcp_md5(s, &tmp, args->md5_password)) {
+		    saved_errno = errno;
+		    close(s);
+		    freeaddrinfo(res);
+		    errno = saved_errno;
+		    return -1;
+	    }
+    }
+    if (args && args->ao_password) {
+	    struct sockaddr_in6 tmp = {};
+
+	    tmp.sin6_family = res->ai_family;
+	    if (set_tcp_ao(s, &tmp, args->ao_password, args->ao_algorithm,
+			   args->ao_sndid, args->ao_rcvid)) {
 		    saved_errno = errno;
 		    close(s);
 		    freeaddrinfo(res);

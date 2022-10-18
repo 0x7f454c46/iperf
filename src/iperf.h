@@ -168,8 +168,30 @@ struct iperf_settings
     unsigned int snd_timeout; /* Timeout for sending tcp messages in active mode, in us */
     struct iperf_time rcv_timeout;  /* Timeout for receiving messages in active mode, in us */
 
-    char     *tcp_md5_password;
+    char      *tcp_md5_password;
+
+    char      *tcp_ao_password;
+    char      *tcp_ao_algorithm;
 };
+#define TCP_AO_RCVID	123
+#define TCP_AO_SNDID	123
+
+#ifndef TCP_AO_MAXKEYLEN
+#define TCP_AO			38	/* (Add/Set MKT) */
+#define TCP_AO_MAXKEYLEN TCP_MD5SIG_MAXKEYLEN
+struct tcp_ao { /* setsockopt(TCP_AO) */
+	struct __kernel_sockaddr_storage tcpa_addr;
+	char	tcpa_alg_name[64];
+	__u16	tcpa_flags;
+	__u8	tcpa_prefix;
+	__u8	tcpa_sndid;
+	__u8	tcpa_rcvid;
+	__u8	tcpa_maclen;
+	__u8	tcpa_keyflags;
+	__u8	tcpa_keylen;
+	__u8	tcpa_key[TCP_AO_MAXKEYLEN];
+} __attribute__((aligned(8)));
+#endif
 
 struct iperf_test;
 
