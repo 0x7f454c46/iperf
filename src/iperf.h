@@ -179,17 +179,21 @@ struct iperf_settings
 #ifndef TCP_AO_MAXKEYLEN
 #define TCP_AO			38	/* (Add/Set MKT) */
 #define TCP_AO_MAXKEYLEN TCP_MD5SIG_MAXKEYLEN
-struct tcp_ao { /* setsockopt(TCP_AO) */
-	struct __kernel_sockaddr_storage tcpa_addr;
-	char	tcpa_alg_name[64];
-	__u16	tcpa_flags;
-	__u8	tcpa_prefix;
-	__u8	tcpa_sndid;
-	__u8	tcpa_rcvid;
-	__u8	tcpa_maclen;
-	__u8	tcpa_keyflags;
-	__u8	tcpa_keylen;
-	__u8	tcpa_key[TCP_AO_MAXKEYLEN];
+struct tcp_ao_add { /* setsockopt(TCP_AO_ADD_KEY) */
+	struct __kernel_sockaddr_storage addr;	/* peer's address for the key */
+	char	alg_name[64];		/* crypto hash algorithm to use */
+	__s32	ifindex;		/* L3 dev index for VRF */
+	__u32   set_current	:1,	/* set key as Current_key at once */
+		set_rnext	:1,	/* request it from peer with RNext_key */
+		reserved	:30;	/* must be 0 */
+	__u16	reserved2;		/* padding, must be 0 */
+	__u8	prefix;			/* peer's address prefix */
+	__u8	sndid;			/* SendID for outgoing segments */
+	__u8	rcvid;			/* RecvID to match for incoming seg */
+	__u8	maclen;			/* length of authentication code (hash) */
+	__u8	keyflags;		/* see TCP_AO_KEYF_ */
+	__u8	keylen;			/* length of ::key */
+	__u8	key[TCP_AO_MAXKEYLEN];
 } __attribute__((aligned(8)));
 #endif
 

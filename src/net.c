@@ -304,32 +304,33 @@ set_tcp_ao(int sk, struct sockaddr_in6 *addr, char *password, char *algo,
 	   unsigned sndid, unsigned rcvid)
 {
 	size_t keylen = strlen(password);
-	struct tcp_ao ao = {};
+	struct tcp_ao_add add = {};
 
         if (addr->sin6_family == AF_INET6) {
 		struct sockaddr_in6 tmp = {};
 
 		tmp.sin6_family = AF_INET6;
-		memcpy(&ao.tcpa_addr, &tmp, sizeof(tmp));
+		memcpy(&add.addr, &tmp, sizeof(tmp));
 	} else {
 		struct sockaddr_in tmp = {};
 
 		tmp.sin_family = AF_INET;
-		memcpy(&ao.tcpa_addr, &tmp, sizeof(tmp));
+		memcpy(&add.addr, &tmp, sizeof(tmp));
 	}
-	ao.tcpa_keylen = keylen;
-	memcpy(ao.tcpa_key, password, keylen);
-	ao.tcpa_prefix = 0;
-	memcpy(ao.tcpa_alg_name, algo, 64);
+	add.keylen = keylen;
+	memcpy(add.key, password, keylen);
+	add.prefix = 0;
+	if (!algo)
+		algo = "hmac(sha1)";
+	strncpy(add.alg_name, algo, 64);
 
-	ao.tcpa_rcvid = rcvid;
-	ao.tcpa_sndid = sndid;
+	add.rcvid = rcvid;
+	add.sndid = sndid;
 
-	ao.tcpa_maclen = 0;
-	ao.tcpa_keyflags = 0;
-	ao.tcpa_flags = 0;
+	add.maclen = 0;
+	add.keyflags = 0;
 
-	return setsockopt(sk, IPPROTO_TCP, TCP_AO, &ao, sizeof(ao));
+	return setsockopt(sk, IPPROTO_TCP, TCP_AO, &add, sizeof(add));
 }
 
 /***************************************************************/
